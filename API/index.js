@@ -4,13 +4,31 @@ import cors from "cors";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ===== identificação da instância (p/ LB)
+const INSTANCE = process.env.INSTANCE || "local";
+const STARTED_AT = new Date().toISOString();
+
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
+// ===== banco em memória (demo)
 const db = { usuarios: [], tarefas: [] };
 
-app.get("/healthz", (_, res) => res.json({ ok: true, ts: Date.now() }));
+// ===== health
+app.get("/healthz", (_, res) => res.json({ ok: true, ts: Date.now(), instance: INSTANCE }));
 
+// ===== endpoints p/ demo de balanceamento
+app.get("/whoami", (_, res) => {
+  res.json({ instance: INSTANCE, pid: process.pid, started_at: STARTED_AT, ts: Date.now() });
+});
+
+app.get("/slow", async (req, res) => {
+  const ms = Number(req.query.ms || 200);
+  await new Promise(r => setTimeout(r, ms));
+  res.json({ ok: true, instance: INSTANCE, delay_ms: ms, ts: Date.now() });
+});
+
+// ===== USUÁRIOS
 app.get("/usuarios", (_, res) => res.json({ usuarios: db.usuarios }));
 app.post("/usuarios", (req, res) => {
   const { id, nome, email } = req.body || {};
@@ -20,6 +38,7 @@ app.post("/usuarios", (req, res) => {
   res.status(201).json({ ok: true });
 });
 
+// ===== TAREFAS
 app.get("/tarefas/usuario/:usuario_id", (req, res) => {
   const { usuario_id } = req.params;
   res.json({ tarefas: db.tarefas.filter(t => t.usuario_id === usuario_id) });
@@ -33,7 +52,7 @@ app.post("/tarefas", (req, res) => {
   res.status(201).json({ ok: true });
 });
 
-// extras (usados pelo front premium)
+// extras usados pelo front
 app.put("/tarefas/:id/status", (req, res) => {
   const t = db.tarefas.find(x => x.id === req.params.id);
   if (!t) return res.status(404).json({ error: "tarefa não encontrada" });
@@ -49,7 +68,7 @@ app.delete("/tarefas/:id", (req, res) => {
   res.json({ ok: true });
 });
 
+// 404
 app.use((_, res) => res.status(404).json({ error: "Not Found" }));
 
-app.listen(PORT, () => console.log(`API ouvindo em http://localhost:${PORT}`));
-
+app.listen(PORT, () => console.log(`API ouvindo em http://localhost:${PORT} (instância ${INSTANCE})`));
