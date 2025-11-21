@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 /* ===================== helpers ===================== */
 const LS_API = "api_base_url";
 const LS_THEME = "theme_pref"; // "light" | "dark"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 async function api(baseUrl, path, opts) {
   const res = await fetch(`${baseUrl}${path}`, {
@@ -117,7 +118,6 @@ function useToastStack() {
 /* ===================== App ===================== */
 export default function App() {
   /* tema */
-  /* tema */
   function getInitialTheme() {
     const saved = localStorage.getItem(LS_THEME);
     if (saved === "light" || saved === "dark") return saved;
@@ -131,9 +131,10 @@ export default function App() {
     localStorage.setItem(LS_THEME, theme);
   }, [theme]);
 
-
   /* base URL */
-  const [baseUrl, setBaseUrl] = useState(localStorage.getItem(LS_API) || "http://localhost:3000");
+  const [baseUrl, setBaseUrl] = useState(
+    localStorage.getItem(LS_API) || API_BASE_URL || "http://localhost:3000"
+  );
   useEffect(() => localStorage.setItem(LS_API, baseUrl), [baseUrl]);
 
   /* toasts (hook no topo) */
@@ -193,7 +194,6 @@ export default function App() {
     } catch { notify("err", "Erro ao criar tarefa"); }
   };
   const updateTaskStatus = async (taskId, status) => {
-    // caso ainda não tenha PUT no backend, remova o await abaixo e mantenha só o setTasks local
     try { await api(baseUrl, `/tarefas/${taskId}/status`, { method: "PUT", body: JSON.stringify({ status }) }); }
     catch { /* se falhar, ainda atualizamos localmente para a demo */ }
     setTasks((arr) => arr.map((t) => (t.id === taskId ? { ...t, status } : t)));
@@ -254,13 +254,12 @@ export default function App() {
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700"
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
-                  placeholder="http://localhost:3000"
+                  placeholder={API_BASE_URL || "https://load-balancer-sd-production.up.railway.app/"}
                 />
                 <Button variant="outline" onClick={checkHealth}>{loadingHealth ? "Testando..." : "Testar"}</Button>
                 {health ? <Badge tone="green">online</Badge> : <Badge tone="red">offline</Badge>}
               </CardBody>
             </Card>
-            
           </div>
         </div>
 
