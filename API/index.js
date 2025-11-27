@@ -18,6 +18,15 @@ const db = { usuarios: [], tarefas: [] };
 app.get("/healthz", (_, res) => res.json({ ok: true, ts: Date.now(), instance: INSTANCE }));
 
 // ===== endpoints p/ demo de balanceamento
+app.get("/", (_, res) => {
+  res.json({
+    ok: true,
+    msg: "API funcionando!",
+    instance: INSTANCE,
+    endpoints: ["/healthz", "/whoami", "/slow", "/usuarios", "/tarefas"]
+  });
+});
+
 app.get("/whoami", (_, res) => {
   res.json({ instance: INSTANCE, pid: process.pid, started_at: STARTED_AT, ts: Date.now() });
 });
@@ -57,7 +66,7 @@ app.put("/tarefas/:id/status", (req, res) => {
   const t = db.tarefas.find(x => x.id === req.params.id);
   if (!t) return res.status(404).json({ error: "tarefa não encontrada" });
   const { status } = req.body || {};
-  if (!["aberta","em_andamento","concluida"].includes(status)) return res.status(400).json({ error: "status inválido" });
+  if (!["aberta", "em_andamento", "concluida"].includes(status)) return res.status(400).json({ error: "status inválido" });
   t.status = status;
   res.json({ ok: true });
 });
