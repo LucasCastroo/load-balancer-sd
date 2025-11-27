@@ -12,7 +12,19 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // ===== banco em memória (demo)
-const db = { usuarios: [], tarefas: [] };
+const db = {
+  usuarios: [
+    { id: 'user-1', nome: 'Alice Silva', email: 'alice@example.com' },
+    { id: 'user-2', nome: 'Bob Santos', email: 'bob@example.com' },
+    { id: 'user-3', nome: 'Carol Oliveira', email: 'carol@example.com' }
+  ],
+  tarefas: [
+    { id: 'task-1', usuario_id: 'user-1', titulo: 'Comprar mantimentos', descricao: 'Leite, pão e café', status: 'aberta', criado_em: new Date().toISOString() },
+    { id: 'task-2', usuario_id: 'user-1', titulo: 'Estudar para a prova', descricao: 'Revisar matéria de Sistemas Distribuídos', status: 'em_andamento', criado_em: new Date().toISOString() },
+    { id: 'task-3', usuario_id: 'user-2', titulo: 'Configurar Nginx', descricao: 'Ajustar regras de load balancing', status: 'concluida', criado_em: new Date().toISOString() },
+    { id: 'task-4', usuario_id: 'user-3', titulo: 'Atualizar documentação', descricao: 'Incluir novos endpoints na doc', status: 'aberta', criado_em: new Date().toISOString() }
+  ]
+};
 
 // ===== health
 app.get("/healthz", (_, res) => res.json({ ok: true, ts: Date.now(), instance: INSTANCE }));
