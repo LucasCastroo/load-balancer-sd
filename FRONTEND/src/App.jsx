@@ -158,6 +158,7 @@ export default function App() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const [tab, setTab] = useState("usuarios");
 
@@ -206,6 +207,20 @@ export default function App() {
     setTasks((arr) => arr.filter((t) => t.id !== taskToDelete.id));
     setModalOpen(false); setTaskToDelete(null);
     notify("ok", "Tarefa removida");
+  };
+
+  const requestDeleteUser = (user) => { setUserToDelete(user); setModalOpen(true); };
+  const confirmDeleteUser = async () => {
+    try { await api(baseUrl, `/usuarios/${userToDelete.id}`, { method: "DELETE" }); }
+    catch { return notify("err", "Erro ao remover usuário"); }
+
+    setUsers((arr) => arr.filter((u) => u.id !== userToDelete.id));
+    if (selectedUser === userToDelete.id) {
+      setSelectedUser("");
+      setTasks([]);
+    }
+    setModalOpen(false); setUserToDelete(null);
+    notify("ok", "Usuário removido");
   };
 
   /* initial */
@@ -332,9 +347,12 @@ export default function App() {
                             <td className="p-3 font-medium">{u.id}</td>
                             <td className="p-3">{u.nome || "—"}</td>
                             <td className="p-3">{u.email}</td>
-                            <td className="p-3">
+                            <td className="p-3 flex gap-2">
                               <Button variant="outline" onClick={() => { setSelectedUser(u.id); setTab("tarefas"); }}>
                                 Ver tarefas
+                              </Button>
+                              <Button variant="danger" onClick={() => requestDeleteUser(u)}>
+                                <Icon name="trash" />
                               </Button>
                             </td>
                           </tr>
@@ -412,7 +430,7 @@ export default function App() {
                               </select>
                             </td>
                             <td className="p-3">{t.criado_em ? new Date(t.criado_em).toLocaleString() : "—"}</td>
-                            <td className="p-3"><Button variant="danger" onClick={() => { setTaskToDelete(t); setModalOpen(true); }}><Icon name="trash" /> Excluir</Button></td>
+                            <td className="p-3"><Button variant="danger" onClick={() => requestDeleteTask(t)}><Icon name="trash" /> Excluir</Button></td>
                           </tr>
                         ))
                       ) : (
@@ -445,13 +463,17 @@ export default function App() {
       {/* modal & toasts */}
       <Modal
         open={modalOpen}
-        title="Remover tarefa?"
-        subtitle={taskToDelete?.titulo}
-        onClose={() => setModalOpen(false)}
-        onConfirm={confirmDeleteTask}
+        title={userToDelete ? "Remover usuário?" : "Remover tarefa?"}
+        subtitle={userToDelete ? userToDelete.nome || userToDelete.email : taskToDelete?.titulo}
+        onClose={() => { setModalOpen(false); setTaskToDelete(null); setUserToDelete(null); }}
+        onConfirm={userToDelete ? confirmDeleteUser : confirmDeleteTask}
         confirmText="Remover"
       >
-        <p className="text-sm text-slate-600 dark:text-slate-300">Esta ação remove a tarefa (seu backend já tem DELETE).</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {userToDelete
+            ? "Cuidado: Isso removerá o usuário e TODAS as suas tarefas."
+            : "Esta ação remove a tarefa permanentemente."}
+        </p>
       </Modal>
 
       <ToastView />

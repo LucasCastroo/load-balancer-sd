@@ -127,5 +127,19 @@ export const DB = {
             memoryDb.tarefas = memoryDb.tarefas.filter(t => t.id !== id);
             return memoryDb.tarefas.length < len;
         }
+    },
+    async deleteUsuario(id) {
+        if (pool) {
+            const { rowCount } = await pool.query("DELETE FROM usuarios WHERE id = $1", [id]);
+            return rowCount > 0;
+        } else {
+            const len = memoryDb.usuarios.length;
+            memoryDb.usuarios = memoryDb.usuarios.filter(u => u.id !== id);
+            // Simula ON DELETE CASCADE da memória
+            if (memoryDb.usuarios.length < len) {
+                memoryDb.tarefas = memoryDb.tarefas.filter(t => t.usuario_id !== id);
+            }
+            return memoryDb.usuarios.length < len;
+        }
     }
 };

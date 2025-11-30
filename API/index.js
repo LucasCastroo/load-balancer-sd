@@ -57,6 +57,17 @@ app.post("/usuarios", async (req, res) => {
   }
 });
 
+app.delete("/usuarios/:id", async (req, res) => {
+  try {
+    const deleted = await DB.deleteUsuario(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "usuário não encontrado" });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Erro ao deletar usuário" });
+  }
+});
+
 // TAREFAS
 app.get("/tarefas/usuario/:usuario_id", async (req, res) => {
   try {
