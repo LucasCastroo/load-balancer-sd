@@ -42,14 +42,14 @@ app.get("/usuarios", async (_, res) => {
 });
 
 app.post("/usuarios", async (req, res) => {
-  const { id, nome, email } = req.body || {};
-  if (!id || !email) return res.status(400).json({ error: "id e email são obrigatórios" });
+  const { nome, email } = req.body || {};
+  if (!email) return res.status(400).json({ error: "email é obrigatório" });
 
   try {
-    const existe = await DB.findUsuario(id) || await DB.findUsuario(email);
-    if (existe) return res.status(409).json({ error: "id ou email já existe" });
+    const existe = await DB.findUsuario(email);
+    if (existe) return res.status(409).json({ error: "email já existe" });
 
-    await DB.createUsuario({ id, nome: nome || "", email });
+    await DB.createUsuario({ nome: nome || "", email });
     res.status(201).json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -58,6 +58,7 @@ app.post("/usuarios", async (req, res) => {
 });
 
 app.delete("/usuarios/:id", async (req, res) => {
+  console.log(`[API] DELETE /usuarios/${req.params.id}`);
   try {
     const deleted = await DB.deleteUsuario(req.params.id);
     if (!deleted) return res.status(404).json({ error: "usuário não encontrado" });
@@ -80,18 +81,16 @@ app.get("/tarefas/usuario/:usuario_id", async (req, res) => {
 });
 
 app.post("/tarefas", async (req, res) => {
-  const { id, usuario_id, titulo, descricao, status } = req.body || {};
-  if (!id || !usuario_id || !titulo) return res.status(400).json({ error: "id, usuario_id e titulo são obrigatórios" });
+  const { usuario_id, titulo, descricao, status } = req.body || {};
+  if (!usuario_id || !titulo) return res.status(400).json({ error: "usuario_id e titulo são obrigatórios" });
 
   try {
     const user = await DB.findUsuario(usuario_id);
     if (!user) return res.status(404).json({ error: "usuario_id não encontrado" });
 
-    const taskExists = await DB.findTarefa(id);
-    if (taskExists) return res.status(409).json({ error: "id da tarefa já existe" });
-
+    // Não precisamos checar ID da tarefa pois é auto-incremento agora
     await DB.createTarefa({
-      id, usuario_id, titulo,
+      usuario_id, titulo,
       descricao: descricao || "",
       status: status || "aberta",
       criado_em: new Date().toISOString()
@@ -120,6 +119,7 @@ app.put("/tarefas/:id/status", async (req, res) => {
 });
 
 app.delete("/tarefas/:id", async (req, res) => {
+  console.log(`[API] DELETE /tarefas/${req.params.id}`);
   try {
     const deleted = await DB.deleteTarefa(req.params.id);
     if (!deleted) return res.status(404).json({ error: "tarefa não encontrada" });

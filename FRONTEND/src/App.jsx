@@ -153,8 +153,8 @@ export default function App() {
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
 
-  const [newUser, setNewUser] = useState({ id: "", nome: "", email: "" });
-  const [newTask, setNewTask] = useState({ id: "", titulo: "", descricao: "", status: "aberta" });
+  const [newUser, setNewUser] = useState({ nome: "", email: "" });
+  const [newTask, setNewTask] = useState({ titulo: "", descricao: "", status: "aberta" });
 
   const [modalOpen, setModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
@@ -180,16 +180,16 @@ export default function App() {
     finally { setLoadingTasks(false); }
   };
   const createUser = async () => {
-    if (!newUser.id || !newUser.email) return notify("warn", "Informe id e email");
-    try { await api(baseUrl, "/usuarios", { method: "POST", body: JSON.stringify(newUser) }); setNewUser({ id: "", nome: "", email: "" }); await loadUsers(); notify("ok", "Usuário criado!"); }
-    catch { notify("err", "Falha ao criar (id/email pode existir)"); }
+    if (!newUser.email) return notify("warn", "Informe o email");
+    try { await api(baseUrl, "/usuarios", { method: "POST", body: JSON.stringify(newUser) }); setNewUser({ nome: "", email: "" }); await loadUsers(); notify("ok", "Usuário criado!"); }
+    catch { notify("err", "Falha ao criar (email pode existir)"); }
   };
   const createTask = async () => {
     if (!selectedUser) return notify("warn", "Selecione um usuário");
-    if (!newTask.id || !newTask.titulo) return notify("warn", "Preencha id e título");
+    if (!newTask.titulo) return notify("warn", "Preencha o título");
     try {
       await api(baseUrl, "/tarefas", { method: "POST", body: JSON.stringify({ ...newTask, usuario_id: selectedUser }) });
-      setNewTask({ id: "", titulo: "", descricao: "", status: "aberta" });
+      setNewTask({ titulo: "", descricao: "", status: "aberta" });
       await loadTasks(selectedUser);
       notify("ok", "Tarefa criada!");
     } catch { notify("err", "Erro ao criar tarefa"); }
@@ -215,7 +215,7 @@ export default function App() {
     catch { return notify("err", "Erro ao remover usuário"); }
 
     setUsers((arr) => arr.filter((u) => u.id !== userToDelete.id));
-    if (selectedUser === userToDelete.id) {
+    if (selectedUser == userToDelete.id) {
       setSelectedUser("");
       setTasks([]);
     }
@@ -230,7 +230,7 @@ export default function App() {
   const filteredUsers = useMemo(() => {
     let arr = users.filter(
       (u) =>
-        u.id.toLowerCase().includes(userSearch.toLowerCase()) ||
+        u.id.toString().includes(userSearch.toLowerCase()) ||
         (u.nome || "").toLowerCase().includes(userSearch.toLowerCase()) ||
         u.email.toLowerCase().includes(userSearch.toLowerCase())
     );
@@ -238,6 +238,9 @@ export default function App() {
     arr = arr.sort((a, b) => {
       const A = (a[key] || "").toString().toLowerCase();
       const B = (b[key] || "").toString().toLowerCase();
+      if (key === "id") {
+        return dir === "asc" ? a.id - b.id : b.id - a.id;
+      }
       if (A < B) return dir === "asc" ? -1 : 1;
       if (A > B) return dir === "asc" ? 1 : -1;
       return 0;
@@ -320,7 +323,6 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col md:flex-row md:items-end gap-3">
-                  <div className="flex-1"><label className="block text-sm mb-1">ID</label><Input value={newUser.id} onChange={(e) => setNewUser({ ...newUser, id: e.target.value })} placeholder="u1" /></div>
                   <div className="flex-1"><label className="block text-sm mb-1">Nome</label><Input value={newUser.nome} onChange={(e) => setNewUser({ ...newUser, nome: e.target.value })} placeholder="Ana" /></div>
                   <div className="flex-1"><label className="block text-sm mb-1">Email</label><Input value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="ana@ex.com" /></div>
                   <Button onClick={createUser}><Icon name="plus" /> Criar</Button>
@@ -344,7 +346,7 @@ export default function App() {
                       ) : filteredUsers.length ? (
                         filteredUsers.map((u) => (
                           <tr key={u.id} className="border-t border-slate-200 dark:border-slate-800">
-                            <td className="p-3 font-medium">{u.id}</td>
+                            <td className="p-3 font-medium">#{u.id}</td>
                             <td className="p-3">{u.nome || "—"}</td>
                             <td className="p-3">{u.email}</td>
                             <td className="p-3 flex gap-2">
@@ -380,14 +382,13 @@ export default function App() {
                     <label className="block text-sm mb-1">Usuário</label>
                     <select className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm" value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)}>
                       <option value="">— Selecione —</option>
-                      {users.map((u) => (<option key={u.id} value={u.id}>{u.id} — {u.nome || u.email}</option>))}
+                      {users.map((u) => (<option key={u.id} value={u.id}>#{u.id} — {u.nome || u.email}</option>))}
                     </select>
                   </div>
                   <div className="flex items-end"><Button variant="outline" className="w-full" onClick={() => selectedUser && loadTasks(selectedUser)}>{loadingTasks ? "Atualizando..." : "Atualizar"}</Button></div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div><label className="block text-sm mb-1">ID</label><Input value={newTask.id} onChange={(e) => setNewTask({ ...newTask, id: e.target.value })} placeholder="t1" /></div>
                   <div>
                     <label className="block text-sm mb-1">Status</label>
                     <select className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm" value={newTask.status} onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}>
@@ -420,7 +421,7 @@ export default function App() {
                       ) : tasks.length ? (
                         tasks.map((t) => (
                           <tr key={t.id} className="border-t border-slate-200 dark:border-slate-800">
-                            <td className="p-3 font-medium">{t.id}</td>
+                            <td className="p-3 font-medium">#{t.id}</td>
                             <td className="p-3">{t.titulo}</td>
                             <td className="p-3">
                               <select className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm" value={t.status} onChange={(e) => updateTaskStatus(t.id, e.target.value)}>
