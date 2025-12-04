@@ -1,16 +1,18 @@
 -- Recriação das tabelas com ID numérico (SERIAL)
 DROP TABLE IF EXISTS tarefas;
+DROP TABLE IF EXISTS tarefa;
 DROP TABLE IF EXISTS usuarios;
+DROP TABLE IF EXISTS usuario;
 
-create table usuarios (
+create table usuario (
   id serial primary key,
   nome text,
   email text unique not null
 );
 
-create table tarefas (
+create table tarefa (
   id serial primary key,
-  usuario_id integer not null references usuarios(id) on delete cascade,
+  usuario_id integer not null references usuario(id) on delete cascade,
   titulo text not null,
   descricao text,
   status text not null default 'aberta',
