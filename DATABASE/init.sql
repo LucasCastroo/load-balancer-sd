@@ -22,12 +22,12 @@ create table tarefa (
 create index idx_tarefas_usuario on tarefas(usuario_id);
 
 -- Inserção de dados iniciais (Seed)
-INSERT INTO usuarios (nome, email) VALUES
+INSERT INTO usuario (nome, email) VALUES
 ('Alice Silva', 'alice@example.com'),
 ('Bob Santos', 'bob@example.com'),
 ('Carol Oliveira', 'carol@example.com');
 
-INSERT INTO tarefas (usuario_id, titulo, descricao, status, criado_em) VALUES
+INSERT INTO tarefa (usuario_id, titulo, descricao, status, criado_em) VALUES
 (1, 'Comprar mantimentos', 'Leite, pão e café', 'aberta', NOW()),
 (1, 'Estudar para a prova', 'Revisar matéria de Sistemas Distribuídos', 'em_andamento', NOW()),
 (2, 'Configurar Nginx', 'Ajustar regras de load balancing', 'concluida', NOW()),
